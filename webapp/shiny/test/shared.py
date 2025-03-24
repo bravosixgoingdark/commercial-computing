@@ -9,7 +9,6 @@ df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
 
 df.fillna({'TotalCharges': df['TotalCharges'].median()}, inplace=True)
 
-df.drop(columns=['customerID'], inplace=True)
 
 label_encoders = {}
 categorical_columns = df.select_dtypes(include=['object']).columns
