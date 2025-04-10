@@ -1,81 +1,60 @@
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from scipy.stats import chi2_contingency
+from sklearn.preprocessing import LabelEncoder
 
-# Load Dataset
-file_path = './WA_Fn-UseC_-Telco-Customer-Churn.csv'
-df = pd.read_csv(file_path)
+data = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
 
-# Display basic info
-print(df.info())
-print(df.head())
+data['TotalCharges'] = pd.to_numeric(data['TotalCharges'], errors='coerce')
+data.dropna(inplace=True)
 
-# Convert 'TotalCharges' to numeric, handling errors
-df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+label_encoder = LabelEncoder()
+data['Churn'] = label_encoder.fit_transform(data['Churn'])  # Yes=1, No=0
 
-# Fill missing values
-df.fillna({'TotalCharges': df['TotalCharges'].median()}, inplace=True)
+gender_table = data.groupby(['gender', 'Churn']).size().unstack().fillna(0)
+gender_table.columns = ['Not Churned', 'Churned']
+gender_table.to_csv('gender_table.csv')
 
-# Drop 'customerID' as it's not useful for analysis
-df.drop(columns=['customerID'], inplace=True)
-
-# Encode categorical variables
-label_encoders = {}
-categorical_columns = df.select_dtypes(include=['object']).columns
-df_encoded = df.copy()
-
-for col in categorical_columns:
-    le = LabelEncoder()
-    df_encoded[col] = le.fit_transform(df[col])
-    label_encoders[col] = le
-
-# Scale numerical features
-scaler = StandardScaler()
-numerical_columns = ['tenure', 'MonthlyCharges', 'TotalCharges']
-df_encoded[numerical_columns] = scaler.fit_transform(df_encoded[numerical_columns])
-
-# Data Visualization
-visualization = plt.figure(figsize=(12,6))
-visualization = sns.countplot(x='Churn', data=df, palette='coolwarm')
-plt.title('Customer Churn Distribution')
-plt.xlabel('Churn')
-plt.ylabel('Count')
-plt.show()
-
-# Churn rate by contract type
-churnrate = plt.figure(figsize=(12,6))
-churnrate = sns.countplot(x='Contract', hue='Churn', data=df, palette='coolwarm')
+plt.figure(figsize=(8, 6))
+sns.barplot(x='Contract', y='Churn', data=data)
 plt.title('Churn Rate by Contract Type')
 plt.xlabel('Contract Type')
-plt.ylabel('Count')
-plt.show()
+plt.ylabel('Churn Rate')
+plt.savefig('churn_rate_contract.png')
+plt.close()
 
-# Monthly Charges distribution by churn status
-charges_distribution = plt.figure(figsize=(12,6))
-charges_distribution = sns.histplot(df, x='MonthlyCharges', hue='Churn', kde=True, palette='coolwarm')
+plt.figure(figsize=(8, 6))
+sns.barplot(x='InternetService', y='Churn', data=data)
+plt.title('Churn Rate by Internet Service Type')
+plt.xlabel('Internet Service Type')
+plt.ylabel('Churn Rate')
+plt.savefig('churn_rate_internet_service.png')
+plt.close()
+
+plt.figure(figsize=(10, 6))
+sns.countplot(y='PaymentMethod', hue='Churn', data=data)
+plt.title('Churn Distribution by Payment Method')
+plt.xlabel('Number of Customers')
+plt.ylabel('Payment Method')
+plt.savefig('churn_distribution_payment_method.png')
+plt.close()
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Churn', y='MonthlyCharges', data=data)
 plt.title('Monthly Charges Distribution by Churn Status')
-plt.xlabel('Monthly Charges')
-plt.ylabel('Density')
-plt.show()
+plt.xlabel('Churn Status')
+plt.ylabel('Monthly Charges')
+plt.savefig('monthly_charges_distribution.png')
+plt.close()
 
-# Tenure distribution by churn status
-tenure_distribution = plt.figure(figsize=(12,6))
-tenure_distribution = sns.histplot(df, x='tenure', hue='Churn', kde=True, palette='coolwarm')
+plt.figure(figsize=(8, 6))
+sns.histplot(data=data, x='tenure', hue='Churn', multiple='stack', bins=30)
 plt.title('Tenure Distribution by Churn Status')
 plt.xlabel('Tenure (Months)')
-plt.ylabel('Density')
-plt.show()
+plt.ylabel('Number of Customers')
+plt.savefig('tenure_distribution_churn.png')
+plt.close()
 
-# Statistical Analysis - Chi-Square Test
-contingency_table = pd.crosstab(df['Contract'], df['Churn'])
-chi2, p, dof, expected = chi2_contingency(contingency_table)
-print(f"Chi-Square Test P-Value (Contract vs Churn): {p}")
-
-contingency_table2 = pd.crosstab(df['PaymentMethod'], df['Churn'])
-chi2, p, dof, expected = chi2_contingency(contingency_table2)
-print(f"Chi-Square Test P-Value (PaymentMethod vs Churn): {p}")
-
-print("Data processing complete. Statistical analysis and visualization generated.")
+print(" Visualizations and gender summary exported successfully for Shiny dashboard.")
