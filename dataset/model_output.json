@@ -1,0 +1,32 @@
+{
+    "model": "Gradient Boosting Classifier",
+    "accuracy": "79.48%",
+    "recommendation": "Customers with month-to-month contracts and high monthly charges are more likely to churn. Offer discounts or switch them to annual plans.",
+    "classification_report": {
+        "0": {
+            "precision": 0.833732057416268,
+            "recall": 0.8999354422207876,
+            "f1-score": 0.8655696988512884,
+            "support": 1549.0
+        },
+        "1": {
+            "precision": 0.6461187214611872,
+            "recall": 0.5044563279857398,
+            "f1-score": 0.5665665665665666,
+            "support": 561.0
+        },
+        "accuracy": 0.79478672985782,
+        "macro avg": {
+            "precision": 0.7399253894387277,
+            "recall": 0.7021958851032637,
+            "f1-score": 0.7160681327089276,
+            "support": 2110.0
+        },
+        "weighted avg": {
+            "precision": 0.7838500282831873,
+            "recall": 0.79478672985782,
+            "f1-score": 0.7860717096514169,
+            "support": 2110.0
+        }
+    }
+}
