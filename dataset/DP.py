@@ -83,7 +83,7 @@ plt.show()
 # 1. Churn Distribution with Percentages
 plt.figure(figsize=(6, 4))
 churn_counts = data['Churn'].value_counts(normalize=True) * 100
-sns.barplot(x=churn_counts.index, y=churn_counts.values, hue=churn_counts.index, legend=False, palette='Set2')
+sns.barplot(x=churn_counts.index, y=churn_counts.values, hue=churn_counts.index, legend=False, palette='Set2', showlegend=False)
 plt.title('Churn Distribution (%)')
 plt.xlabel('Churn')
 plt.ylabel('Percentage')

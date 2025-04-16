@@ -1,104 +1,190 @@
 from faicons import icon_svg
-import plotly.express as px
-
+import plotly.graph_objects as go
 from shinywidgets import render_widget
-
-# Import data from shared.py
 from shared import app_dir, df
 from shiny import reactive
 from shiny.express import input, render, ui
 
-ui.page_opts(title="Penguins dashboard", fillable=True)
+ui.page_opts(title="Telecom Customer Churn Dashboard", fillable=True)
 
+ui.include_css(app_dir / "styles.css")
 
 with ui.layout_column_wrap(fill=False):
-    with ui.value_box(showcase=icon_svg("earlybirds")):
-        "Number of customers"
-
+    with ui.value_box(showcase=icon_svg("users")):
+        "Number of Customers"
         @render.text
-        def count():
-            return df.shape[0]
+        def total_customers():
+            return f"{len(df):,}"
 
-    with ui.value_box(showcase=icon_svg("ruler-horizontal")):
-        "Average montly customer bill"
-
+    with ui.value_box(showcase=icon_svg("money-bill")):
+        "Total Monthly Bill ($)"
         @render.text
-        def bill_length():
-            return f"{df['MonthlyCharges'].mean():.1f}"
+        def total_bill():
+            return f"${df['MonthlyCharges'].sum():,.2f}"
 
-    with ui.value_box(showcase=icon_svg("ruler-vertical")):
-        "Average bill depth"
-
+    with ui.value_box(showcase=icon_svg("chart-bar")):
+        "Average Churn Rate (%)"
         @render.text
-        def bill_depth():
-            return f"something"
-
+        def avg_churn_rate():
+            churn_rate = (df['Churn'].value_counts(normalize=True).get('Yes', 0) * 100)
+            return f"{churn_rate:.2f}%"
 
 with ui.layout_columns():
     with ui.card(full_screen=True):
         with ui.navset_card_underline():
-            with ui.nav_panel("Churn rate"):
-                with ui.layout_columns():
-                    @render_widget
-                    def churn_rate():
-                        churn = px.histogram(df, x=input.var1(), y='Churn', color=input.var1(), histfunc='avg')
-                        churn.update_yaxes(title_text='Churn rate')
-                        return churn
-                with ui.layout_columns():
-                     ui.input_select("var1", None, choices=["Contract", "InternetService"], width="100%")
-
             with ui.nav_panel("Churn Distribution"):
-                with ui.layout_columns():
-                    @render_widget
-                    def churn_distribution():
-                        distribution = px.histogram(df.replace({'Churn': {0: 'Yes', 1: 'No'}}), y='PaymentMethod', color='Churn')
-                        distribution.update_xaxes(title_text='Number of Customers')
-                        distribution.update_yaxes(title_text='Payment Method')
-                        return distribution
-            with ui.nav_panel("Charges Distribution"):
-                with ui.layout_columns():
-                    @render_widget
-                    def charges_distribution():
-                        distribution = px.box(df.replace({'Churn': {0: 'Yes', 1: 'No'}}), x='Churn', y='MonthlyCharges')
-                        distribution.update_xaxes(title_text='Churn Status')
-                        distribution.update_yaxes(title_text='Monthly Charges')
-                        return distribution
-            with ui.nav_panel("Tenure Distribution"):
-                with ui.layout_columns():
-                    @render_widget
-                    def tenure_distribution():
-                        distribution = px.histogram(df.replace({'Churn': {0: 'Yes', 1: 'No'}}), x='tenure', color='Churn', barmode='stack', nbins=30)
-                        distribution.update_xaxes(title_text='Tenure (Months)')
-                        distribution.update_yaxes(title_text='Number of Customers')
-                        return distribution
+                @render_widget
+                def churn_distribution():
+                    churn_data = df['Churn'].value_counts(normalize=True) * 100
 
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(
+                        x=churn_data.index,
+                        y=churn_data.values,
+                        text=[f"{val:.1f}%" for val in churn_data.values],
+                        textposition="outside"
+                    ))
+                    fig.update_layout(
+                        title="Churn Distribution",
+                        xaxis_title="Churn",
+                        yaxis_title="Percentage",
+                        yaxis=dict(range=[0, 100])
+                    )
+                    return fig
 
+            with ui.nav_panel("Churn Insights"):
+                @render_widget
+                def vs_churn_chart():
+                    monthly_data = df.groupby(['MonthlyCharges_Bin', 'Churn']).size().unstack(fill_value=0)
+                    internet_data = df.groupby(['InternetService', 'Churn']).size().unstack(fill_value=0)
+                    contract_data = df.groupby(['Contract', 'Churn']).size().unstack(fill_value=0)
+                    tenure_data = df.groupby(['Tenure_Bin', 'Churn']).size().unstack(fill_value=0)
+                    security_data = df.groupby(['OnlineSecurity', 'Churn']).size().unstack(fill_value=0)
 
-    with ui.card(full_screen=True):
-        ui.card_header("Penguin data")
+                    fig = go.Figure()
 
-        @render.data_frame
-        def summary_statistics():
-            cols = ['customerID', 
-                    'PhoneService', 
-                    'MultipleLines', 
-                    'InternetService', 
-                    'StreamingTV', 
-                    'StreamingMovies', 
-                    'Contract', 
-                    'PaperlessBilling', 
-                    'PaymentMethod', 
-                    'MonthlyCharges', 
-                    'TotalCharges'
-                    ]
-            return render.DataGrid(df[cols], filters=True)
+                    fig.add_trace(go.Bar(
+                        x=monthly_data.index,
+                        y=monthly_data['Yes'],
+                        name="Churned (Yes)",
+                        marker_color="#EF553B",
+                        visible=True  
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=monthly_data.index,
+                        y=monthly_data['No'],
+                        name="Not Churned (No)",
+                        marker_color="#636EFA",
+                        visible=True 
+                    ))
 
+                    # Internet Service
+                    fig.add_trace(go.Bar(
+                        x=internet_data.index,
+                        y=internet_data['Yes'],
+                        name="Churned (Yes)",
+                        marker_color="#EF553B",
+                        visible=False
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=internet_data.index,
+                        y=internet_data['No'],
+                        name="Not Churned (No)",
+                        marker_color="#636EFA",
+                        visible=False
+                    ))
 
-ui.include_css(app_dir / "styles.css")
+                    # Contract
+                    fig.add_trace(go.Bar(
+                        x=contract_data.index,
+                        y=contract_data['Yes'],
+                        name="Churned (Yes)",
+                        marker_color="#EF553B",
+                        visible=False
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=contract_data.index,
+                        y=contract_data['No'],
+                        name="Not Churned (No)",
+                        marker_color="#636EFA",
+                        visible=False
+                    ))
 
+                    # Tenure
+                    fig.add_trace(go.Bar(
+                        x=tenure_data.index,
+                        y=tenure_data['Yes'],
+                        name="Churned (Yes)",
+                        marker_color="#EF553B",
+                        visible=False
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=tenure_data.index,
+                        y=tenure_data['No'],
+                        name="Not Churned (No)",
+                        marker_color="#636EFA",
+                        visible=False
+                    ))
 
-@reactive.calc
-def filtered_df():
-    filt_df = df[df["species"].isin(input.species())]
-    filt_df = filt_df.loc[filt_df["body_mass_g"] < input.mass()]
-    return filt_df
+                    # Online Security
+                    fig.add_trace(go.Bar(
+                        x=security_data.index,
+                        y=security_data['Yes'],
+                        name="Churned (Yes)",
+                        marker_color="#EF553B",
+                        visible=False
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=security_data.index,
+                        y=security_data['No'],
+                        name="Not Churned (No)",
+                        marker_color="#636EFA",
+                        visible=False
+                    ))
+
+                    fig.update_layout(
+                        updatemenus=[
+                            dict(
+                                buttons=[
+                                    dict(label="Monthly Charges",
+                                         method="update",
+                                         args=[{"visible": [True, True, False, False, False, False, False, False, False, False]},
+                                               {"title": "Monthly Charges vs Churn",
+                                                "xaxis": {"title": "Monthly Charges Range"},
+                                                "yaxis": {"title": "Customer Count"}}]),
+                                    dict(label="Internet Service",
+                                         method="update",
+                                         args=[{"visible": [False, False, True, True, False, False, False, False, False, False]},
+                                               {"title": "Internet Service vs Churn",
+                                                "xaxis": {"title": "Internet Service Type"},
+                                                "yaxis": {"title": "Customer Count"}}]),
+                                    dict(label="Contract",
+                                         method="update",
+                                         args=[{"visible": [False, False, False, False, True, True, False, False, False, False]},
+                                               {"title": "Contract Type vs Churn",
+                                                "xaxis": {"title": "Contract Type"},
+                                                "yaxis": {"title": "Customer Count"}}]),
+                                    dict(label="Tenure",
+                                         method="update",
+                                         args=[{"visible": [False, False, False, False, False, False, True, True, False, False]},
+                                               {"title": "Tenure vs Churn",
+                                                "xaxis": {"title": "Tenure Range (Months)"},
+                                                "yaxis": {"title": "Customer Count"}}]),
+                                    dict(label="Online Security",
+                                         method="update",
+                                         args=[{"visible": [False, False, False, False, False, False, False, False, True, True]},
+                                               {"title": "Online Security vs Churn",
+                                                "xaxis": {"title": "Online Security Status"},
+                                                "yaxis": {"title": "Customer Count"}}]),
+                                ],
+                                direction="down",
+                                showactive=True
+                            )
+                        ],
+                        title="Monthly Charges vs Churn", 
+                        xaxis=dict(title="Monthly Charges Range"),  
+                        yaxis=dict(title="Customer Count"),  
+                        barmode="stack"
+                    )
+
+                    return fig
