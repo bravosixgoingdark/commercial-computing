@@ -5,9 +5,11 @@ from shared import app_dir, df
 from shiny import reactive
 from shiny.express import input, render, ui
 
-ui.page_opts(title="Telecom Customer Churn Dashboard", fillable=True)
+ui.page_opts(fillable=True)
 
 ui.include_css(app_dir / "styles.css")
+
+ui.input_dark_mode(mode="dark")
 
 with ui.layout_column_wrap(fill=False):
     with ui.value_box(showcase=icon_svg("users")):
@@ -45,10 +47,12 @@ with ui.layout_columns():
                         textposition="outside"
                     ))
                     fig.update_layout(
-                        title="Churn Distribution",
                         xaxis_title="Churn",
                         yaxis_title="Percentage",
                         yaxis=dict(range=[0, 100])
+                    )
+                    fig.update_layout(
+                        template="plotly_dark"
                     )
                     return fig
 
@@ -149,31 +153,29 @@ with ui.layout_columns():
                                     dict(label="Monthly Charges",
                                          method="update",
                                          args=[{"visible": [True, True, False, False, False, False, False, False, False, False]},
-                                               {"title": "Monthly Charges vs Churn",
-                                                "xaxis": {"title": "Monthly Charges Range"},
+                                               {"xaxis": {"title": "Monthly Charges Range"},
                                                 "yaxis": {"title": "Customer Count"}}]),
                                     dict(label="Internet Service",
                                          method="update",
                                          args=[{"visible": [False, False, True, True, False, False, False, False, False, False]},
-                                               {"title": "Internet Service vs Churn",
-                                                "xaxis": {"title": "Internet Service Type"},
+                                               {"xaxis": {"title": "Internet Service Type"},
                                                 "yaxis": {"title": "Customer Count"}}]),
                                     dict(label="Contract",
                                          method="update",
                                          args=[{"visible": [False, False, False, False, True, True, False, False, False, False]},
-                                               {"title": "Contract Type vs Churn",
+                                               {
                                                 "xaxis": {"title": "Contract Type"},
                                                 "yaxis": {"title": "Customer Count"}}]),
                                     dict(label="Tenure",
                                          method="update",
                                          args=[{"visible": [False, False, False, False, False, False, True, True, False, False]},
-                                               {"title": "Tenure vs Churn",
+                                               {
                                                 "xaxis": {"title": "Tenure Range (Months)"},
                                                 "yaxis": {"title": "Customer Count"}}]),
                                     dict(label="Online Security",
                                          method="update",
                                          args=[{"visible": [False, False, False, False, False, False, False, False, True, True]},
-                                               {"title": "Online Security vs Churn",
+                                               {
                                                 "xaxis": {"title": "Online Security Status"},
                                                 "yaxis": {"title": "Customer Count"}}]),
                                 ],
@@ -181,10 +183,10 @@ with ui.layout_columns():
                                 showactive=True
                             )
                         ],
-                        title="Monthly Charges vs Churn", 
                         xaxis=dict(title="Monthly Charges Range"),  
                         yaxis=dict(title="Customer Count"),  
                         barmode="stack"
                     )
+                    fig.update_layout(template="plotly_dark")
 
                     return fig
