@@ -4,6 +4,9 @@ from shinywidgets import render_widget
 from shared import app_dir, df
 from shiny import reactive
 from shiny.express import input, render, ui
+import requests
+import json
+from pprint import pformat
 
 ui.page_opts(fillable=True)
 
@@ -190,3 +193,45 @@ with ui.layout_columns():
                     fig.update_layout(template="plotly_dark")
 
                     return fig
+            with ui.nav_panel("Churn prediction API"):
+                @render.code
+                def api_response():
+                    try:
+                        response = requests.get("https://churnapp.mooo.com/api/report")  # Replace with your API endpoint
+                        response.raise_for_status()
+                        data = response.json()
+                        output = f"""
+                            Model: {data['model']}
+                            Accuracy: {data['accuracy']}
+                            
+                            Classification Report:
+                            - Class 0: 
+                              * Precision: {data['classification_report']['0']['precision']}
+                              * Recall: {data['classification_report']['0']['recall']}
+                              * F1-Score: {data['classification_report']['0']['f1-score']}
+                              * Support: {data['classification_report']['0']['support']}
+                              
+                            - Class 1:
+                              * Precision: {data['classification_report']['1']['precision']}
+                              * Recall: {data['classification_report']['1']['recall']}
+                              * F1-Score: {data['classification_report']['1']['f1-score']}
+                              * Support: {data['classification_report']['1']['support']}
+                              
+                            Macro Average:
+                            - Precision: {data['classification_report']['macro avg']['precision']}
+                            - Recall: {data['classification_report']['macro avg']['recall']}
+                            - F1-Score: {data['classification_report']['macro avg']['f1-score']}
+                            - Support: {data['classification_report']['macro avg']['support']}
+                            
+                            Weighted Average:
+                            - Precision: {data['classification_report']['weighted avg']['precision']}
+                            - Recall: {data['classification_report']['weighted avg']['recall']}
+                            - F1-Score: {data['classification_report']['weighted avg']['f1-score']}
+                            - Support: {data['classification_report']['weighted avg']['support']}
+                            
+                            Recommendation:
+                            {data['recommendation']}
+                        """
+                        return output 
+                    except requests.exceptions.RequestException as e:
+                        return f"Error fetching data from API: {e}"
