@@ -8,6 +8,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from flask import Flask, jsonify, request
+import os
+
 
 app = Flask(__name__)
 
@@ -51,3 +53,7 @@ results = {
 def get_result():   
     return jsonify(results) 
 
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
