@@ -197,7 +197,7 @@ with ui.layout_columns():
                 @render.code
                 def api_response():
                     try:
-                        response = requests.get("https://churnapp.mooo.com/api/report")  # Replace with your API endpoint
+                        response = requests.get("http://churnapp.mooo.com:5000/api/report")  # Replace with your API endpoint
                         response.raise_for_status()
                         data = response.json()
                         output = f"""

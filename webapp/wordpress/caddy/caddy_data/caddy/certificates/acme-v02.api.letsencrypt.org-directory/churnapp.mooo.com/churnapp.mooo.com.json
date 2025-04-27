@@ -1,0 +1,18 @@
+{
+	"sans": [
+		"churnapp.mooo.com"
+	],
+	"issuer_data": {
+		"url": "https://acme-v02.api.letsencrypt.org/acme/cert/05b4c8edbc1e45adf53d9e7f014d1ff11544",
+		"ca": "https://acme-v02.api.letsencrypt.org/directory",
+		"renewal_info": {
+			"suggestedWindow": {
+				"start": "2025-06-17T14:28:22Z",
+				"end": "2025-06-19T09:39:12Z"
+			},
+			"_uniqueIdentifier": "kydGmAOpUWiOmNbEQkjbI79YlNI.BbTI7bweRa31PZ5_AU0f8RVE",
+			"_retryAfter": "2025-04-24T10:34:18.815828909Z",
+			"_selectedTime": "2025-06-17T18:10:08Z"
+		}
+	}
+}
